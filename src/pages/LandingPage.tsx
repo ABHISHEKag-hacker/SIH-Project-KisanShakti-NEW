@@ -1,6 +1,7 @@
 // src/pages/LandingPage.tsx
 
 import React from 'react';
+import { Link } from 'react-router-dom'; // Import Link
 import { Sprout, Cloud, TrendingUp, Shield, Gift, Beaker, ShoppingBag, ArrowRight, Star } from 'lucide-react';
 import ThemeSwitcher from '../components/ThemeSwitcher';
 
@@ -34,9 +35,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <span className="font-bold text-xl text-gray-800 dark:text-gray-100">किsan Shakti</span>
           </div>
           <div className="flex items-center gap-4">
+             <Link to="/blog" className="text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Blog</Link> {/* Add blog link */}
             <ThemeSwitcher />
-            <button 
-              onClick={onGetStarted} 
+            <button
+              onClick={onGetStarted}
               className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-sm hover:shadow-md"
             >
               Get Started
@@ -55,8 +57,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto">
               One platform for weather, MSP rates, crop insurance, government schemes, soil analysis, and marketplace access.
             </p>
-            <button 
-              onClick={onGetStarted} 
+            <button
+              onClick={onGetStarted}
               className="bg-green-600 text-white px-8 py-4 rounded-xl hover:bg-green-700 transition-all font-bold text-lg flex items-center justify-center gap-2 mx-auto shadow-lg hover:shadow-xl transform hover:-translate-y-1 duration-300"
             >
               Start Farming Smarter <ArrowRight className="w-5 h-5" />
@@ -116,8 +118,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           <div className="max-w-4xl mx-auto px-6 py-20 text-center">
             <h2 className="text-4xl font-bold text-white mb-4">Ready to Transform Your Farming?</h2>
             <p className="text-xl text-green-100 mb-8">Join thousands of farmers using Kisan Shakti to increase profits and reduce risks.</p>
-            <button 
-              onClick={onGetStarted} 
+            <button
+              onClick={onGetStarted}
               className="bg-white text-green-600 px-8 py-4 rounded-xl hover:bg-gray-100 transition-colors font-bold text-lg shadow-md hover:shadow-lg transform hover:-translate-y-1 duration-300"
             >
               Get Started For Free
@@ -136,4 +138,4 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   );
 };
 
-export default LandingPage; 
+export default LandingPage;

@@ -28,6 +28,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import CartPage from './pages/CartPage';
 import FarmTrackingPage from './pages/FarmTrackingPage';
 import SellPage from './pages/SellPage';
+import BlogPage from './pages/BlogPage';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -90,6 +91,8 @@ function App() {
               // Routes accessible when the user is logged out
               <>
                 <Route path="/" element={<LandingPage onGetStarted={() => setShowAuthWindow(true)} />} />
+                {/* For logged-out users, we pass null as the currentUser */}
+                <Route path="/blog" element={<BlogPage currentUser={null} />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </>
             ) : (
@@ -110,6 +113,8 @@ function App() {
                   <Route path="cart" element={<CartPage />} />
                   <Route path="farm-tracking" element={<FarmTrackingPage currentUser={currentUser} />} />
                   <Route path="sell" element={<SellPage />} />
+                  {/* Pass the logged-in user to the BlogPage */}
+                  <Route path="blog" element={<BlogPage currentUser={currentUser} />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </>

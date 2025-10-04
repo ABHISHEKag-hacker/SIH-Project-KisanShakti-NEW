@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import {
     LayoutGrid, Cloud, TrendingUp, Shield, Gift, Users, Beaker,
-    ShoppingBag, User, ShoppingCart, LogOut, Settings, ChevronDown, Menu, X, Map, Tag
+    ShoppingBag, User, ShoppingCart, LogOut, Settings, ChevronDown, Menu, X, Map, Tag,
+    Newspaper // Added Newspaper icon for the blog
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import AIAssistant from './AIAssistant';
@@ -52,6 +53,7 @@ const Layout: React.FC<LayoutProps> = ({ onLogout, currentUser }) => {
     { path: '/cart', icon: ShoppingCart, key: 'cart' },
     { path: '/sell', icon: Tag, key: 'sell' },
     { path: '/referral', icon: Users, key: 'referral' },
+    { path: '/blog', icon: Newspaper, key: 'blog' }, // Added Blog navigation item
     { path: '/profile', icon: User, key: 'profile' },
   ];
 
@@ -88,54 +90,54 @@ const Layout: React.FC<LayoutProps> = ({ onLogout, currentUser }) => {
     <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex">
       <aside className="hidden lg:block w-64 fixed left-4 top-4 bottom-4 z-50">
           <div className="h-full bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg flex flex-col">
-            <div className="p-6 flex items-center gap-3 flex-shrink-0">
-                <img src="/logo.png" alt="Kisan Shakti Logo" className="w-10 h-10" />
-                <div>
-                  <span className="font-bold text-gray-800 dark:text-gray-100 text-xl whitespace-nowrap">किsan Shakti</span>
-                </div>
-            </div>
-            <NavLinks />
+              <div className="p-6 flex items-center gap-3 flex-shrink-0">
+                  <img src="/logo.png" alt="Kisan Shakti Logo" className="w-10 h-10" />
+                  <div>
+                    <span className="font-bold text-gray-800 dark:text-gray-100 text-xl whitespace-nowrap">किsan Shakti</span>
+                  </div>
+              </div>
+              <NavLinks />
           </div>
       </aside>
 
       <div className="flex-1 flex flex-col lg:pl-72">
           <header className="sticky top-0 z-40 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-lg w-full">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-20 border-b border-gray-200 dark:border-gray-700">
-                    <div className="lg:hidden">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2">
-                            <Menu className="w-6 h-6" />
-                        </button>
-                    </div>
-                    <h1 className="hidden lg:block text-2xl font-bold text-gray-900 dark:text-white">{pageTitle}</h1>
-                    
-                    <h1 className="lg:hidden text-xl font-bold text-gray-900 dark:text-white absolute left-1/2 -translate-x-1/2">{pageTitle}</h1>
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="flex items-center justify-between h-20 border-b border-gray-200 dark:border-gray-700">
+                      <div className="lg:hidden">
+                          <button onClick={() => setIsMobileMenuOpen(true)} className="p-2">
+                              <Menu className="w-6 h-6" />
+                          </button>
+                      </div>
+                      <h1 className="hidden lg:block text-2xl font-bold text-gray-900 dark:text-white">{pageTitle}</h1>
+                      
+                      <h1 className="lg:hidden text-xl font-bold text-gray-900 dark:text-white absolute left-1/2 -translate-x-1/2">{pageTitle}</h1>
 
-                    <div className="flex items-center gap-4">
-                        <div className="hidden lg:flex items-center gap-2">
-                           <LanguageSwitcher />
-                           <ThemeSwitcher />
-                        </div>
-                        <div className="relative group">
-                            <button className="flex items-center gap-2 p-2 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                               <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
-                                  <User className="w-5 h-5 text-white" />
-                                </div>
-                                <span className="hidden sm:inline font-medium text-sm">{currentUser.name?.split(' ')[0] || 'Farmer'}</span>
-                                <ChevronDown className="w-4 h-4 text-gray-500 hidden sm:inline"/>
-                            </button>
-                            <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border dark:border-gray-700 py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                                <Link to="/profile" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                    <User className="w-4 h-4"/> Profile
-                                </Link>
-                                <button onClick={onLogout} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                    <LogOut className="w-4 h-4"/> Logout
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                      <div className="flex items-center gap-4">
+                          <div className="hidden lg:flex items-center gap-2">
+                             <LanguageSwitcher />
+                             <ThemeSwitcher />
+                          </div>
+                          <div className="relative group">
+                              <button className="flex items-center gap-2 p-2 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                                 <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                                   <User className="w-5 h-5 text-white" />
+                                 </div>
+                                  <span className="hidden sm:inline font-medium text-sm">{currentUser.name?.split(' ')[0] || 'Farmer'}</span>
+                                  <ChevronDown className="w-4 h-4 text-gray-500 hidden sm:inline"/>
+                              </button>
+                              <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border dark:border-gray-700 py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                  <Link to="/profile" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                      <User className="w-4 h-4"/> Profile
+                                  </Link>
+                                  <button onClick={onLogout} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                      <LogOut className="w-4 h-4"/> Logout
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
           </header>
 
           <main className="flex-grow p-4 sm:p-6 lg:p-8">
