@@ -1,0 +1,54 @@
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .input {
+    @apply w-full px-4 py-3 bg-gray-100 dark:bg-gray-700/50 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all;
+  }
+
+  .label {
+    @apply block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1;
+  }
+
+  .button-primary {
+    @apply w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-all duration-300 transform active:scale-95 shadow-md hover:shadow-lg;
+  }
+
+  .button-secondary {
+    @apply w-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold py-3 px-4 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300 transform active:scale-95;
+  }
+  
+  .radio-label {
+      @apply flex items-center justify-center p-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer transition-all w-full;
+  }
+  
+  /* Style for checked radio button's label */
+  input[type="radio"]:checked + .radio-label {
+      @apply bg-green-50 dark:bg-green-900/50 border-green-500 text-green-600 dark:text-green-300 font-semibold;
+  }
+   /* Hide the actual radio button */
+  input[type="radio"] {
+      @apply hidden;
+  }
+}
+
+/* Custom fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Custom grid background for landing page */
+.bg-grid-gray-200 {
+    background-image: linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
+    background-size: 2rem 2rem;
+}
+.dark .bg-grid-gray-700\/40 {
+    background-image: linear-gradient(to right, rgba(55, 65, 81, 0.4) 1px, transparent 1px), linear-gradient(to bottom, rgba(55, 65, 81, 0.4) 1px, transparent 1px);
+    background-size: 3rem 3rem;
+}
