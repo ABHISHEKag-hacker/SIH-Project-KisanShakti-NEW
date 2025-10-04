@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 
 // Assumption: You pass the currently logged-in user to this component
 interface BlogPageProps {
-  currentUser: any; 
+  currentUser: any;
 }
 
 // Define a more detailed structure for a blog post
@@ -17,7 +17,7 @@ interface BlogPost {
   title: string;
   author: string;
   authorId: string;
-  date: string; // Consider using Firestore Timestamps for better sorting
+  date: any; // Keep as any to handle both Timestamp and string
   excerpt: string;
   content: string; // Full content for the blog post
   likes: string[]; // Array of user UIDs who have liked the post
@@ -39,9 +39,15 @@ const BlogPage: React.FC<BlogPageProps> = ({ currentUser }) => {
         const querySnapshot = await getDocs(postsCollectionRef);
         const posts: BlogPost[] = [];
         querySnapshot.forEach((doc) => {
-          posts.push({ id: doc.id, ...doc.data() } as BlogPost);
+          const data = doc.data();
+          posts.push({
+              id: doc.id,
+              ...data,
+              // This is the fix: Convert Firestore Timestamp to a readable date string
+              date: data.date?.toDate().toLocaleDateString()
+          } as BlogPost);
         });
-        // Sort by date, newest first (assuming date is in a sortable format like YYYY-MM-DD)
+        // Sort by date, newest first
         posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setBlogPosts(posts);
       } catch (err) {
@@ -60,10 +66,10 @@ const BlogPage: React.FC<BlogPageProps> = ({ currentUser }) => {
 
     const postRef = doc(db, 'blogPosts', postId);
     const post = blogPosts.find(p => p.id === postId);
-    
+
     if (post) {
       const alreadyLiked = post.likes.includes(currentUser.uid);
-      
+
       try {
         if (alreadyLiked) {
           // Unlike the post
@@ -71,7 +77,7 @@ const BlogPage: React.FC<BlogPageProps> = ({ currentUser }) => {
             likes: arrayRemove(currentUser.uid)
           });
           // Update state locally for immediate feedback
-          setBlogPosts(blogPosts.map(p => 
+          setBlogPosts(blogPosts.map(p =>
             p.id === postId ? { ...p, likes: p.likes.filter(uid => uid !== currentUser.uid) } : p
           ));
         } else {
@@ -80,7 +86,7 @@ const BlogPage: React.FC<BlogPageProps> = ({ currentUser }) => {
             likes: arrayUnion(currentUser.uid)
           });
            // Update state locally
-           setBlogPosts(blogPosts.map(p => 
+           setBlogPosts(blogPosts.map(p =>
             p.id === postId ? { ...p, likes: [...p.likes, currentUser.uid] } : p
           ));
         }
@@ -113,7 +119,7 @@ const BlogPage: React.FC<BlogPageProps> = ({ currentUser }) => {
            </div>
            {/* Show "Add Post" button only if the user is an admin */}
            {isAdmin && (
-            <Link 
+            <Link
               to="/blog/new" // We will create this route later
               className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
             >
@@ -145,16 +151,16 @@ const BlogPage: React.FC<BlogPageProps> = ({ currentUser }) => {
                   </div>
                   <div className="p-6 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <button 
+                        <button
                           onClick={() => handleLike(post.id)}
                           className={`flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-red-500 transition-colors ${isLiked ? 'text-red-500' : ''}`}
                         >
-                          <Heart size={20} fill={isLiked ? 'currentColor' : 'none'} /> 
+                          <Heart size={20} fill={isLiked ? 'currentColor' : 'none'} />
                           <span className="font-semibold">{post.likes.length}</span>
                         </button>
                         {/* Future feature: comments */}
                         {/* <button className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-blue-500">
-                           <MessageSquare size={20} /> 
+                           <MessageSquare size={20} />
                            <span className="font-semibold">0</span>
                         </button> */}
                     </div>

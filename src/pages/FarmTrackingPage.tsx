@@ -67,7 +67,8 @@ const FarmTrackingPage: React.FC<FarmTrackingPageProps> = ({ currentUser }) => {
   useEffect(() => {
     const fetchPlots = async () => {
       if (!currentUser?.uid) return;
-      const plotsRef = collection(db, 'farmers', currentUser.uid, 'plots');
+      // Corrected collection path
+      const plotsRef = collection(db, 'users', currentUser.uid, 'plots');
       const snapshot = await getDocs(plotsRef);
       const fetchedPlots: Plot[] = snapshot.docs.map(d => ({
         id: parseInt(d.id),
@@ -106,7 +107,8 @@ const FarmTrackingPage: React.FC<FarmTrackingPageProps> = ({ currentUser }) => {
   useEffect(() => {
     const fetchDevices = async () => {
       if (!currentUser?.uid) return;
-      const devicesRef = collection(db, 'farmers', currentUser.uid, 'devices');
+      // Corrected collection path
+      const devicesRef = collection(db, 'users', currentUser.uid, 'devices');
       const snapshot = await getDocs(devicesRef);
       const fetchedDevices: Device[] = snapshot.docs.map(d => ({
         id: d.id,
@@ -227,7 +229,8 @@ const FarmTrackingPage: React.FC<FarmTrackingPageProps> = ({ currentUser }) => {
     }
 
     try {
-      const plotRef = doc(db, 'farmers', currentUser.uid, 'plots', newPlot.id.toString());
+      // Corrected collection path
+      const plotRef = doc(db, 'users', currentUser.uid, 'plots', newPlot.id.toString());
       await setDoc(plotRef, newPlot, { merge: true });
 
       setPlots(prev => {
@@ -246,7 +249,8 @@ const FarmTrackingPage: React.FC<FarmTrackingPageProps> = ({ currentUser }) => {
     if (!window.confirm('Are you sure you want to delete this plot?')) return;
 
     try {
-      await deleteDoc(doc(db, 'farmers', currentUser.uid, 'plots', id.toString()));
+      // Corrected collection path
+      await deleteDoc(doc(db, 'users', currentUser.uid, 'plots', id.toString()));
       setPlots(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       console.error(err);
@@ -314,7 +318,8 @@ const FarmTrackingPage: React.FC<FarmTrackingPageProps> = ({ currentUser }) => {
     }
   
     try {
-        const deviceRef = doc(db, 'farmers', currentUser.uid, 'devices', newDevice.id);
+        // Corrected collection path
+        const deviceRef = doc(db, 'users', currentUser.uid, 'devices', newDevice.id);
         await setDoc(deviceRef, newDevice, { merge: true });
   
         setDevices(prev => {
@@ -334,7 +339,8 @@ const FarmTrackingPage: React.FC<FarmTrackingPageProps> = ({ currentUser }) => {
     if (!window.confirm('Are you sure you want to delete this device?')) return;
 
     try {
-        await deleteDoc(doc(db, 'farmers', currentUser.uid, 'devices', id));
+        // Corrected collection path
+        await deleteDoc(doc(db, 'users', currentUser.uid, 'devices', id));
         setDevices(prev => prev.filter(d => d.id !== id));
     } catch (err) {
         console.error(err);
@@ -344,7 +350,8 @@ const FarmTrackingPage: React.FC<FarmTrackingPageProps> = ({ currentUser }) => {
   
   const handleToggleDeviceStatus = async (device: Device) => {
     const newStatus = device.status === 'on' ? 'off' : 'on';
-    const deviceRef = doc(db, 'farmers', currentUser.uid, 'devices', device.id);
+    // Corrected collection path
+    const deviceRef = doc(db, 'users', currentUser.uid, 'devices', device.id);
     
     try {
         await updateDoc(deviceRef, { status: newStatus });

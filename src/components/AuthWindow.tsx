@@ -1,7 +1,7 @@
 // src/components/AuthWindow.tsx
 
 import React, { useState } from 'react';
-import { X, Sprout, User, MapPin, Wind } from "lucide-react";
+import { X, Sprout, User, MapPin, Wind, Building } from "lucide-react";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../services/firebase";
@@ -18,13 +18,21 @@ interface FarmerData {
   soilType: string; cropGrown: string[]; farmingType: string; farmingExperience: string;
   irrigationSource: string; waterAvailability: string; bankAccount: string; aadhaarLinked: string;
 }
+interface ConsumerData {
+    fullName: string;
+    phoneNumber: string;
+    state: string;
+    city: string;
+}
 
 // Step Indicator Component
-const StepIndicator = ({ currentStep }: { currentStep: number }) => {
-    const steps = [
+const StepIndicator = ({ currentStep, userType }: { currentStep: number, userType: 'farmer' | 'consumer' }) => {
+    const steps = userType === 'farmer' ? [
         { num: 1, title: 'Personal', icon: User },
         { num: 2, title: 'Farming', icon: Sprout },
         { num: 3, title: 'Resources', icon: Wind },
+    ] : [
+        { num: 1, title: 'Personal', icon: User },
     ];
     return (
         <div className="flex justify-between items-center px-2">
@@ -51,12 +59,19 @@ const StepIndicator = ({ currentStep }: { currentStep: number }) => {
 const AuthWindow: React.FC<AuthWindowProps> = ({ isOpen, onClose, onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
+  const [userType, setUserType] = useState<'farmer' | 'consumer' | null>(null);
   const [step, setStep] = useState(1);
 
   const [farmerData, setFarmerData] = useState<FarmerData>({
     fullName: "", phoneNumber: "", state: "", city: "", landSize: "", landOwnership: "Owned",
     soilType: "Alluvial", cropGrown: [], farmingType: "Conventional", farmingExperience: "",
     irrigationSource: "Borewell", waterAvailability: "Moderate", bankAccount: "No", aadhaarLinked: "No",
+  });
+  const [consumerData, setConsumerData] = useState<ConsumerData>({
+      fullName: "",
+      phoneNumber: "",
+      state: "",
+      city: ""
   });
   
   const states = Object.keys(statesAndCities) as (keyof typeof statesAndCities)[];
@@ -68,12 +83,14 @@ const AuthWindow: React.FC<AuthWindowProps> = ({ isOpen, onClose, onLogin }) => 
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      const userDocRef = doc(db, "farmers", user.uid);
+      const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
 
-      if (!userDoc.exists() || !userDoc.data().farmerProfile?.landSize) {
+      if (!userDoc.exists() || !userDoc.data().role) {
         setFarmerData(prev => ({ ...prev, fullName: user.displayName || '' }));
-        setShowSignup(true); setStep(1);
+        setConsumerData(prev => ({ ...prev, fullName: user.displayName || ''}));
+        setShowSignup(true); 
+        setStep(1);
       } else {
         onLogin(userDoc.data()); onClose();
       }
@@ -89,11 +106,21 @@ const AuthWindow: React.FC<AuthWindowProps> = ({ isOpen, onClose, onLogin }) => 
     try {
       const uid = auth.currentUser?.uid;
       if (!uid) throw new Error('Authentication error.');
-      const userData = {
-        uid, name: farmerData.fullName, email: auth.currentUser?.email || null, phone: farmerData.phoneNumber,
-        location: `${farmerData.city}, ${farmerData.state}`, farmerProfile: farmerData,
-      };
-      await setDoc(doc(db, "farmers", uid), userData, { merge: true });
+      
+      let userData;
+      if (userType === 'farmer') {
+          userData = {
+            uid, name: farmerData.fullName, email: auth.currentUser?.email || null, phone: farmerData.phoneNumber,
+            location: `${farmerData.city}, ${farmerData.state}`, role: 'farmer', farmerProfile: farmerData,
+          };
+      } else {
+        userData = {
+            uid, name: consumerData.fullName, email: auth.currentUser?.email || null, phone: consumerData.phoneNumber,
+            location: `${consumerData.city}, ${consumerData.state}`, role: 'consumer',
+          };
+      }
+
+      await setDoc(doc(db, "users", uid), userData, { merge: true });
       onLogin(userData); onClose();
     } catch (error) {
       console.error("Signup failed", error);
@@ -103,12 +130,68 @@ const AuthWindow: React.FC<AuthWindowProps> = ({ isOpen, onClose, onLogin }) => 
     }
   };
 
-  const handleInputChange = (field: keyof FarmerData, value: string | string[]) => {
+  const handleFarmerInputChange = (field: keyof FarmerData, value: string | string[]) => {
     setFarmerData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleConsumerInputChange = (field: keyof ConsumerData, value: string) => {
+    setConsumerData((prev) => ({ ...prev, [field]: value }));
   };
 
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);
+
+  const renderFarmerForm = () => (
+    <>
+        {step === 1 && (
+            <div className="space-y-4 animate-fade-in">
+                <div><label className="label">Full Name *</label><input type="text" value={farmerData.fullName} onChange={(e) => handleFarmerInputChange("fullName", e.target.value)} className="input" required/></div>
+                <div><label className="label">Phone Number</label><input type="tel" value={farmerData.phoneNumber} onChange={(e) => handleFarmerInputChange("phoneNumber", e.target.value)} className="input"/></div>
+                <div className="grid grid-cols-2 gap-4">
+                <div><label className="label">State *</label><select value={farmerData.state} onChange={(e) => handleFarmerInputChange("state", e.target.value)} className="input" required><option value="">Select</option>{states.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                <div><label className="label">City *</label><select value={farmerData.city} onChange={(e) => handleFarmerInputChange("city", e.target.value)} className="input" disabled={!farmerData.state} required><option value="">Select</option>{farmerData.state && statesAndCities[farmerData.state as keyof typeof statesAndCities].map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                </div>
+                <button type="button" onClick={nextStep} className="w-full button-primary mt-4">Next</button>
+            </div>
+        )}
+        {step === 2 && (
+            <div className="space-y-4 animate-fade-in">
+                <div className="grid grid-cols-2 gap-4">
+                    <div><label className="label">Land (acres)*</label><input type="number" value={farmerData.landSize} onChange={(e) => handleFarmerInputChange("landSize", e.target.value)} className="input" required/></div>
+                    <div><label className="label">Ownership</label><select value={farmerData.landOwnership} onChange={e => handleFarmerInputChange('landOwnership', e.target.value)} className="input"><option>Owned</option><option>Leased</option></select></div>
+                    <div><label className="label">Soil Type</label><select value={farmerData.soilType} onChange={e => handleFarmerInputChange('soilType', e.target.value)} className="input"><option>Alluvial</option><option>Black</option><option>Red</option><option>Laterite</option><option>Other</option></select></div>
+                    <div><label className="label">Experience</label><input type="number" value={farmerData.farmingExperience} onChange={(e) => handleFarmerInputChange("farmingExperience", e.target.value)} className="input"/></div>
+                </div>
+                <div><label className="label">Primary Crops</label><input type="text" placeholder="e.g. Wheat, Cotton" value={farmerData.cropGrown.join(', ')} onChange={(e) => handleFarmerInputChange("cropGrown", e.target.value.split(',').map(c => c.trim()))} className="input"/></div>
+                <div className="flex gap-4 mt-4"><button type="button" onClick={prevStep} className="button-secondary">Back</button><button type="button" onClick={nextStep} className="button-primary">Next</button></div>
+            </div>
+        )}
+
+        {step === 3 && (
+            <div className="space-y-4 animate-fade-in">
+                <div className="grid grid-cols-2 gap-4">
+                    <div><label className="label">Water Source</label><select value={farmerData.irrigationSource} onChange={e => handleFarmerInputChange('irrigationSource', e.target.value)} className="input"><option>Borewell</option><option>Canal</option><option>Rain-fed</option><option>Other</option></select></div>
+                    <div><label className="label">Availability</label><select value={farmerData.waterAvailability} onChange={e => handleFarmerInputChange('waterAvailability', e.target.value)} className="input"><option>Abundant</option><option>Moderate</option><option>Scarce</option></select></div>
+                </div>
+                <div className="pt-2"><label className="label mb-2">Bank Account?</label><div className="flex gap-4"><input type="radio" id="bankYes" name="bankAccount" value="Yes" checked={farmerData.bankAccount === 'Yes'} onChange={e => handleFarmerInputChange('bankAccount', e.target.value)}/><label htmlFor="bankYes" className="radio-label">Yes</label><input type="radio" id="bankNo" name="bankAccount" value="No" checked={farmerData.bankAccount === 'No'} onChange={e => handleFarmerInputChange('bankAccount', e.target.value)}/><label htmlFor="bankNo" className="radio-label">No</label></div></div>
+                <div className="pt-2"><label className="label mb-2">Aadhaar Linked?</label><div className="flex gap-4"><input type="radio" id="aadhaarYes" name="aadhaar" value="Yes" checked={farmerData.aadhaarLinked === 'Yes'} onChange={e => handleFarmerInputChange('aadhaarLinked', e.target.value)}/><label htmlFor="aadhaarYes" className="radio-label">Yes</label><input type="radio" id="aadhaarNo" name="aadhaar" value="No" checked={farmerData.aadhaarLinked === 'No'} onChange={e => handleFarmerInputChange('aadhaarLinked', e.target.value)}/><label htmlFor="aadhaarNo" className="radio-label">No</label></div></div>
+                <div className="flex gap-4 mt-4"><button type="button" onClick={prevStep} className="button-secondary">Back</button><button type="submit" disabled={loading} className="button-primary">{loading ? 'Saving...' : 'Complete Profile'}</button></div>
+            </div>
+        )}
+    </>
+  );
+
+  const renderConsumerForm = () => (
+      <div className="space-y-4 animate-fade-in">
+        <div><label className="label">Full Name *</label><input type="text" value={consumerData.fullName} onChange={(e) => handleConsumerInputChange("fullName", e.target.value)} className="input" required/></div>
+        <div><label className="label">Phone Number</label><input type="tel" value={consumerData.phoneNumber} onChange={(e) => handleConsumerInputChange("phoneNumber", e.target.value)} className="input"/></div>
+        <div className="grid grid-cols-2 gap-4">
+            <div><label className="label">State *</label><select value={consumerData.state} onChange={(e) => handleConsumerInputChange("state", e.target.value)} className="input" required><option value="">Select</option>{states.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+            <div><label className="label">City *</label><select value={consumerData.city} onChange={(e) => handleConsumerInputChange("city", e.target.value)} className="input" disabled={!consumerData.state} required><option value="">Select</option>{consumerData.state && statesAndCities[consumerData.state as keyof typeof statesAndCities].map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+        </div>
+        <button type="submit" disabled={loading} className="w-full button-primary mt-4">{loading ? 'Saving...' : 'Complete Profile'}</button>
+    </div>
+  )
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -130,48 +213,28 @@ const AuthWindow: React.FC<AuthWindowProps> = ({ isOpen, onClose, onLogin }) => 
                 Sign In with Google
               </button>
             </div>
+          ) : !userType ? (
+            <div className="space-y-4 animate-fade-in text-center">
+                <h3 className="font-semibold text-lg">Are you a...</h3>
+                <div className="flex gap-4">
+                    <button onClick={() => setUserType('farmer')} className="w-full p-6 border-2 rounded-lg flex flex-col items-center gap-2 hover:border-green-500 hover:bg-green-50 dark:hover:bg-gray-700">
+                        <Sprout size={32} className="text-green-600" />
+                        <span className="font-bold">Farmer</span>
+                    </button>
+                    <button onClick={() => setUserType('consumer')} className="w-full p-6 border-2 rounded-lg flex flex-col items-center gap-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700">
+                        <Building size={32} className="text-blue-600" />
+                        <span className="font-bold">Consumer</span>
+                    </button>
+                </div>
+            </div>
           ) : (
-            <form onSubmit={(e) => { e.preventDefault(); if(step === 3) handleSignup(); }}>
+            <form onSubmit={(e) => { e.preventDefault(); if((userType === 'farmer' && step === 3) || userType === 'consumer') handleSignup(); }}>
               <div className="mb-6">
-                <StepIndicator currentStep={step} />
+                <StepIndicator currentStep={step} userType={userType} />
               </div>
               
-              {step === 1 && (
-                <div className="space-y-4 animate-fade-in">
-                  <div><label className="label">Full Name *</label><input type="text" value={farmerData.fullName} onChange={(e) => handleInputChange("fullName", e.target.value)} className="input" required/></div>
-                  <div><label className="label">Phone Number</label><input type="tel" value={farmerData.phoneNumber} onChange={(e) => handleInputChange("phoneNumber", e.target.value)} className="input"/></div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div><label className="label">State *</label><select value={farmerData.state} onChange={(e) => handleInputChange("state", e.target.value)} className="input" required><option value="">Select</option>{states.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-                    <div><label className="label">City *</label><select value={farmerData.city} onChange={(e) => handleInputChange("city", e.target.value)} className="input" disabled={!farmerData.state} required><option value="">Select</option>{farmerData.state && statesAndCities[farmerData.state as keyof typeof statesAndCities].map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                  </div>
-                  <button type="button" onClick={nextStep} className="w-full button-primary mt-4">Next</button>
-                </div>
-              )}
+              {userType === 'farmer' ? renderFarmerForm() : renderConsumerForm()}
 
-              {step === 2 && (
-                <div className="space-y-4 animate-fade-in">
-                   <div className="grid grid-cols-2 gap-4">
-                      <div><label className="label">Land (acres)*</label><input type="number" value={farmerData.landSize} onChange={(e) => handleInputChange("landSize", e.target.value)} className="input" required/></div>
-                      <div><label className="label">Ownership</label><select value={farmerData.landOwnership} onChange={e => handleInputChange('landOwnership', e.target.value)} className="input"><option>Owned</option><option>Leased</option></select></div>
-                      <div><label className="label">Soil Type</label><select value={farmerData.soilType} onChange={e => handleInputChange('soilType', e.target.value)} className="input"><option>Alluvial</option><option>Black</option><option>Red</option><option>Laterite</option><option>Other</option></select></div>
-                      <div><label className="label">Experience</label><input type="number" value={farmerData.farmingExperience} onChange={(e) => handleInputChange("farmingExperience", e.target.value)} className="input"/></div>
-                   </div>
-                   <div><label className="label">Primary Crops</label><input type="text" placeholder="e.g. Wheat, Cotton" value={farmerData.cropGrown.join(', ')} onChange={(e) => handleInputChange("cropGrown", e.target.value.split(',').map(c => c.trim()))} className="input"/></div>
-                   <div className="flex gap-4 mt-4"><button type="button" onClick={prevStep} className="button-secondary">Back</button><button type="button" onClick={nextStep} className="button-primary">Next</button></div>
-                </div>
-              )}
-
-              {step === 3 && (
-                <div className="space-y-4 animate-fade-in">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div><label className="label">Water Source</label><select value={farmerData.irrigationSource} onChange={e => handleInputChange('irrigationSource', e.target.value)} className="input"><option>Borewell</option><option>Canal</option><option>Rain-fed</option><option>Other</option></select></div>
-                        <div><label className="label">Availability</label><select value={farmerData.waterAvailability} onChange={e => handleInputChange('waterAvailability', e.target.value)} className="input"><option>Abundant</option><option>Moderate</option><option>Scarce</option></select></div>
-                    </div>
-                    <div className="pt-2"><label className="label mb-2">Bank Account?</label><div className="flex gap-4"><input type="radio" id="bankYes" name="bankAccount" value="Yes" checked={farmerData.bankAccount === 'Yes'} onChange={e => handleInputChange('bankAccount', e.target.value)}/><label htmlFor="bankYes" className="radio-label">Yes</label><input type="radio" id="bankNo" name="bankAccount" value="No" checked={farmerData.bankAccount === 'No'} onChange={e => handleInputChange('bankAccount', e.target.value)}/><label htmlFor="bankNo" className="radio-label">No</label></div></div>
-                    <div className="pt-2"><label className="label mb-2">Aadhaar Linked?</label><div className="flex gap-4"><input type="radio" id="aadhaarYes" name="aadhaar" value="Yes" checked={farmerData.aadhaarLinked === 'Yes'} onChange={e => handleInputChange('aadhaarLinked', e.target.value)}/><label htmlFor="aadhaarYes" className="radio-label">Yes</label><input type="radio" id="aadhaarNo" name="aadhaar" value="No" checked={farmerData.aadhaarLinked === 'No'} onChange={e => handleInputChange('aadhaarLinked', e.target.value)}/><label htmlFor="aadhaarNo" className="radio-label">No</label></div></div>
-                    <div className="flex gap-4 mt-4"><button type="button" onClick={prevStep} className="button-secondary">Back</button><button type="submit" disabled={loading} className="button-primary">{loading ? 'Saving...' : 'Complete Profile'}</button></div>
-                </div>
-              )}
             </form>
           )}
         </div>
